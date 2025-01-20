@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>九九スネーク</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: none;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fcfc98;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        h1 {
+            color: #1990da;
+            margin: 10px;
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            text-align: center;
+        }
+
+        #speed-controls {
+            margin: 10px;
+        }
+
+        #speed-controls button {
+            padding: 10px 15px;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            margin: 5px;
+            background-color: #aae4ac;
+            color: rgb(50, 152, 248);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        #speed-controls button:hover {
+            background-color: #b3e9b5;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 1;
+            margin: 10px auto;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            border: 2px solid #f9e054;
+            background-color: #adf0c5;
+        }
+
+        #score {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: #197fec;
+            margin: 5px;
+            text-align: center;
+        }
+
+        #question {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: #0b7bea;
+            margin: 5px;
+            padding: 10px;
+            background-color: #f3d448;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #49a3db;
+            background-color: rgba(250, 223, 223, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            width: 90%;
+            max-width: 300px;
+        }
+
+        #controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            width: 100%;
+            max-width: 300px;
+            margin: 10px auto;
+        }
+
+        .control-btn {
+            padding: 15px;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background-color: #aae4ac;
+            color: rgb(50, 152, 248);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .control-btn:active {
+            background-color: #b3e9b5;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+            background-color: #aae4ac;
+            color: rgb(50, 152, 248);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: #b3e9b5;
+        }
+
+        @media (max-height: 600px) {
+            h1 {
+                font-size: 1rem;
+                margin: 5px;
+            }
+            #game-container {
+                margin: 5px auto;
+            }
+            .control-btn {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>乗法スネークゲーム</h1>
+    <div id="speed-controls">
+        <button onclick="setSpeed(300)">遅い</button>
+        <button onclick="setSpeed(200)">普通</button>
+        <button onclick="setSpeed(100)">速い</button>
+    </div>
+    <div id="question">問題: </div>
+    <div id="score">得点: 0</div>
+    <div id="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div id="game-over">
+            <h2>ゲームオーバー!</h2>
+            <p>最終得点: <span id="final-score">0</span></p>
+            <p><span id="game-over-reason"></span></p>
+            <button onclick="restartGame()">もう一度</button>
+        </div>
+    </div>
+    <div id="controls">
+        <div></div>
+        <button class="control-btn" id="upBtn">↑</button>
+        <div></div>
+        <button class="control-btn" id="leftBtn">←</button>
+        <button class="control-btn" id="downBtn">↓</button>
+        <button class="control-btn" id="rightBtn">→</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let gridSize;
+        let tileCount;
+        let gameSpeed = 200;
+        let gameLoop;
+
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            gridSize = Math.floor(canvas.width / 20);
+            tileCount = Math.floor(canvas.width / gridSize);
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        let snake = [{ x: 10, y: 10 }];
+        let foods = [];
+        let dx = 0;
+        let dy = 0;
+        let score = 0;
+        let gameOver = false;
+        let currentQuestion = { num1: 0, num2: 0, result: 0 };
+
+        function setSpeed(speed) {
+            gameSpeed = speed;
+            if (!gameOver) {
+                clearTimeout(gameLoop);
+                drawGame();
+            }
+        }
+
+        function setupControls() {
+            document.addEventListener('keydown', handleDirection);
+
+            document.getElementById('upBtn').addEventListener('click', () => handleDirection({ key: 'ArrowUp' }));
+            document.getElementById('downBtn').addEventListener('click', () => handleDirection({ key: 'ArrowDown' }));
+            document.getElementById('leftBtn').addEventListener('click', () => handleDirection({ key: 'ArrowLeft' }));
+            document.getElementById('rightBtn').addEventListener('click', () => handleDirection({ key: 'ArrowRight' }));
+        }
+
+        function handleDirection(event) {
+            const goingUp = dy === -1;
+            const goingDown = dy === 1;
+            const goingRight = dx === 1;
+            const goingLeft = dx === -1;
+
+            switch (event.key) {
+                case 'ArrowLeft':
+                    if (!goingRight) { dx = -1; dy = 0; }
+                    break;
+                case 'ArrowUp':
+                    if (!goingDown) { dx = 0; dy = -1; }
+                    break;
+                case 'ArrowRight':
+                    if (!goingLeft) { dx = 1; dy = 0; }
+                    break;
+                case 'ArrowDown':
+                    if (!goingUp) { dx = 0; dy = 1; }
+                    break;
+            }
+        }
+
+        function generateQuestion() {
+            const num1 = Math.floor(Math.random() * 9) + 1;
+            const num2 = Math.floor(Math.random() * 9) + 1;
+            currentQuestion = { num1, num2, result: num1 * num2 };
+            document.getElementById('question').textContent = `問題: ${num1} × ${num2} = ?`;
+        }
+
+        function generateFoods() {
+            foods = [];
+            const correctAnswer = { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount), value: currentQuestion.result, isCorrect: true };
+            foods.push(correctAnswer);
+
+            for (let i = 0; i < 4; i++) {
+                let wrongAnswer;
+                do {
+                    wrongAnswer = { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount), value: currentQuestion.result + Math.floor(Math.random() * 11 - 5), isCorrect: false };
+                } while (foods.some(f => f.x === wrongAnswer.x && f.y === wrongAnswer.y || f.value === wrongAnswer.value));
+                foods.push(wrongAnswer);
+            }
+        }
+
+        function drawGame() {
+            if (gameOver) return;
+
+            clearCanvas();
+            moveSnake();
+            checkCollision();
+            drawSnake();
+            drawFoods();
+
+            gameLoop = setTimeout(drawGame, gameSpeed);
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function moveSnake() {
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+            snake.pop();
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount || snake.slice(1).some(segment => segment.x === head.x && segment.y === head.y)) {
+                gameOver = true;
+                document.getElementById('game-over').style.display = 'block';
+                document.getElementById('final-score').textContent = score;
+                return;
+            }
+
+            for (let i = 0; i < foods.length; i++) {
+                if (head.x === foods[i].x && head.y === foods[i].y) {
+                    if (foods[i].isCorrect) {
+                        score += 10;
+                        snake.push({});
+                        document.getElementById('score').textContent = `得点: ${score}`;
+                        generateQuestion();
+                        generateFoods();
+                    } else {
+                        gameOver = true;
+                        document.getElementById('game-over').style.display = 'block';
+                        document.getElementById('final-score').textContent = score;
+                    }
+                    break;
+                }
+            }
+        }
+
+        function drawSnake() {
+            ctx.fillStyle = 'lawngreen';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
+            });
+        }
+
+        function drawFoods() {
+            foods.forEach(food => {
+                ctx.fillStyle = food.isCorrect ? 'hotpink' : 'hotpink';
+                ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+                ctx.fillStyle = 'white';
+                ctx.font = `${gridSize * 0.6}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(food.value, food.x * gridSize + gridSize / 2, food.y * gridSize + gridSize / 2);
+            });
+        }
+
+        function restartGame() {
+            clearTimeout(gameLoop);
+            resizeCanvas();
+            snake = [{ x: Math.floor(tileCount / 2), y: Math.floor(tileCount / 2) }];
+            dx = 0;
+            dy = 0;
+            score = 0;
+            gameOver = false;
+            document.getElementById('score').textContent = '得点: 0';
+            document.getElementById('game-over').style.display = 'none';
+            generateQuestion();
+            generateFoods();
+            drawGame();
+        }
+
+        setupControls();
+        generateQuestion();
+        generateFoods();
+        drawGame();
+    </script>
+</body>
+</html>
