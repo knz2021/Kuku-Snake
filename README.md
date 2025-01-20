@@ -1,4 +1,4 @@
-# KukuSnakeJP
+# KukuSnake
 
 Overview
 
