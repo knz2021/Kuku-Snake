@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>九九スネ</title>
+    <title>九九スネーク</title>
     <style>
         * {
             margin: 0;
@@ -115,6 +115,13 @@
             background-color: #b3e9b5;
         }
 
+        #difficulty-selection {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
         @media (max-height: 600px) {
             h1 {
                 font-size: 1rem;
@@ -130,7 +137,12 @@
     </style>
 </head>
 <body>
-    <h1>九九スネ</h1>
+    <h1>掛け算スネークゲーム</h1>
+    <div id="difficulty-selection">
+        <button onclick="selectDifficulty('easy')">イージーモード</button>
+        <button onclick="selectDifficulty('normal')">ノーマルモード</button>
+        <button onclick="selectDifficulty('hard')">ハードモード</button>
+    </div>
     <div id="question">問題: </div>
     <div id="score">スコア: 0</div>
     <div id="game-container">
@@ -156,6 +168,29 @@
         const ctx = canvas.getContext('2d');
         let gridSize;
         let tileCount;
+        let difficulty = 'normal';
+        let gameSpeed = 200;
+        let scoreMultiplier = 1;
+
+        function selectDifficulty(mode) {
+            difficulty = mode;
+            switch(mode) {
+                case 'easy':
+                    gameSpeed = 300;
+                    scoreMultiplier = 0.5;
+                    break;
+                case 'normal':
+                    gameSpeed = 200;
+                    scoreMultiplier = 1;
+                    break;
+                case 'hard':
+                    gameSpeed = 100;
+                    scoreMultiplier = 2;
+                    break;
+            }
+            document.getElementById('difficulty-selection').style.display = 'none';
+            restartGame();
+        }
 
         // キャンバスのリサイズ処理
         function resizeCanvas() {
@@ -322,6 +357,7 @@
             document.getElementById('game-over').style.display = 'block';
             document.getElementById('final-score').textContent = score;
             document.getElementById('game-over-reason').textContent = reason;
+            document.getElementById('difficulty-selection').style.display = 'flex'; 
         }
 
         function drawGame() {
@@ -334,11 +370,12 @@
             checkCollision();
             drawSnake();
             drawFoods();
-            setTimeout(drawGame, 200);
+            setTimeout(drawGame, gameSpeed);
+            
         }
 
         function clearCanvas() {
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = '#ffe4b5';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
@@ -366,7 +403,7 @@
             for (let i = 0; i < foods.length; i++) {
                 if (head.x === foods[i].x && head.y === foods[i].y) {
                     if (foods[i].isCorrect) {
-                        score += 10;
+                        score += Math.round(10 * scoreMultiplier);
                         snake.push({});
                         document.getElementById('score').textContent = `スコア: ${score}`;
                         generateQuestion();
@@ -410,7 +447,8 @@
             dy = 0;
             score = 0;
             gameOver = false;
-            gameOverReason = "";
+            gameOver
+            Reason = "";
             document.getElementById('score').textContent = `スコア: ${score}`;
             document.getElementById('game-over').style.display = 'none';
             generateQuestion();
@@ -420,9 +458,9 @@
 
         // ゲーム初期化
         setupControls();
-        generateQuestion();
-        generateFoods();
-        drawGame();
+
+        // 難易度選択の初期表示
+        document.getElementById('difficulty-selection').style.display = 'flex';
     </script>
 </body>
 </html>
