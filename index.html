@@ -41,7 +41,7 @@
             width: 100%;
             height: 100%;
             border: 2px solid #f9e054;
-            background-color: #adf0c5;
+            background-color: #f5deb3;
         }
 
         #score {
@@ -88,7 +88,7 @@
         .control-btn {
             padding: 15px;
             font-size: clamp(1rem, 3vw, 1.2rem);
-            background-color: #aae4ac;
+            background-color: #f3d448;
             color: rgb(50, 152, 248);
             border: none;
             border-radius: 10px;
@@ -97,13 +97,13 @@
         }
 
         .control-btn:active {
-            background-color: #b3e9b5;
+            background-color: #f3d448;
         }
 
         button {
             padding: 5px 10px;
             font-size: clamp(1rem, 3vw, 1.2rem);
-            background-color: #aae4ac;
+            background-color: #f3d448;
             color: rgb(50, 152, 248);
             border: none;
             border-radius: 10px;
@@ -112,7 +112,7 @@
         }
 
         button:hover {
-            background-color: #b3e9b5;
+            background-color: #f3d448;
         }
 
         #difficulty-selection {
@@ -375,7 +375,7 @@
         }
 
         function clearCanvas() {
-            ctx.fillStyle = '#ffe4b5';
+            ctx.fillStyle = '#f5deb3';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
@@ -417,7 +417,7 @@
         }
 
         function drawSnake() {
-            ctx.fillStyle = 'lawngreen';
+            ctx.fillStyle = '#66cdaa';
             snake.forEach(segment => {
                 ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize - 2, gridSize - 2);
             });
