@@ -171,6 +171,7 @@
         let difficulty = 'normal';
         let gameSpeed = 200;
         let scoreMultiplier = 1;
+        let noWallCollision = false;
 
         function selectDifficulty(mode) {
             difficulty = mode;
@@ -178,14 +179,17 @@
                 case 'easy':
                     gameSpeed = 300;
                     scoreMultiplier = 0.5;
+                    noWallCollision = true;
                     break;
                 case 'normal':
                     gameSpeed = 200;
                     scoreMultiplier = 1;
+                    noWallCollision = false;
                     break;
                 case 'hard':
                     gameSpeed = 100;
                     scoreMultiplier = 2;
+                    noWallCollision = false;
                     break;
             }
             document.getElementById('difficulty-selection').style.display = 'none';
@@ -381,6 +385,15 @@
 
         function moveSnake() {
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+            if (noWallCollision) {
+                // 壁の衝突を無視し、反対側に移動
+                if (head.x < 0) head.x = tileCount - 1;
+                if (head.x >= tileCount) head.x = 0;
+                if (head.y < 0) head.y = tileCount - 1;
+                if (head.y >= tileCount) head.y = 0;
+            }
+
             snake.unshift(head);
             snake.pop();
         }
@@ -388,7 +401,7 @@
         function checkCollision() {
             const head = snake[0];
 
-            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+            if (!noWallCollision && (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount)) {
                 setGameOver("壁に衝突しました！");
                 return;
             }
@@ -447,8 +460,7 @@
             dy = 0;
             score = 0;
             gameOver = false;
-            gameOver
-            Reason = "";
+            gameOverReason = "";
             document.getElementById('score').textContent = `スコア: ${score}`;
             document.getElementById('game-over').style.display = 'none';
             generateQuestion();
