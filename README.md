@@ -102,6 +102,4 @@ Safari
 
 License
 
-This game is open-source and free to use for personal and educational purposes.
-
 Enjoy the game and improve your multiplication skills!
