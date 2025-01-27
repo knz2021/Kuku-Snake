@@ -154,14 +154,6 @@
             <button onclick="restartGame()">もう一度プレイ</button>
         </div>
     </div>
-    <div id="controls">
-        <div></div>
-        <button class="control-btn" id="upBtn">↑</button>
-        <div></div>
-        <button class="control-btn" id="leftBtn">←</button>
-        <button class="control-btn" id="downBtn">↓</button>
-        <button class="control-btn" id="rightBtn">→</button>
-    </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -229,12 +221,6 @@
         function setupControls() {
             // キーボード操作
             document.addEventListener('keydown', handleDirection);
-
-            // ボタン操作
-            document.getElementById('upBtn').addEventListener('click', () => handleDirection({ key: 'ArrowUp' }));
-            document.getElementById('downBtn').addEventListener('click', () => handleDirection({ key: 'ArrowDown' }));
-            document.getElementById('leftBtn').addEventListener('click', () => handleDirection({ key: 'ArrowLeft' }));
-            document.getElementById('rightBtn').addEventListener('click', () => handleDirection({ key: 'ArrowRight' }));
 
             // スワイプ操作
             let touchStartX = 0;
